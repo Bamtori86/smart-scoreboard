@@ -19,6 +19,7 @@ HTML = """
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
   body {
@@ -28,7 +29,6 @@ HTML = """
   }
   .board { display:flex; gap:6px; height:700px; padding:6px; }
 
-  /* ── 팀 패널 ── */
   .team-panel {
     flex:4; border-radius:16px;
     display:flex; align-items:center; justify-content:center;
@@ -48,10 +48,8 @@ HTML = """
   }
   .press-ring.active { transform:scale(2.5); opacity:1; }
 
-  /* ── 중앙 ── */
   .center { flex:2.2; display:flex; flex-direction:column; gap:6px; }
 
-  /* 세트 */
   .set-row { display:flex; gap:6px; height:130px; flex-shrink:0; }
   .set-box {
     flex:1; border-radius:12px;
@@ -61,7 +59,6 @@ HTML = """
   }
   .set-box:active { filter:brightness(1.4); }
 
-  /* 타이머 */
   .timer-box {
     flex:1; background:#1c1c1c; border:2px solid #2a2a2a; border-radius:14px;
     display:flex; flex-direction:column;
@@ -70,9 +67,9 @@ HTML = """
   }
   .timer-label { font-size:1.05rem; color:#666; letter-spacing:.15em; text-transform:uppercase; font-weight:700; }
   .timer-time {
-    font-family:'Courier New',monospace;
+    font-family:'Orbitron', 'Courier New', monospace;
     font-size:clamp(3rem,6vw,4.2rem);
-    font-weight:900; letter-spacing:.1em;
+    font-weight:900; letter-spacing:.08em;
     transition:color .4s;
   }
   .timer-status { font-size:.9rem; color:#555; font-weight:600; }
@@ -93,7 +90,6 @@ HTML = """
   #btnPause { background:#ff8800; color:#fff; display:none; }
   #btnReset { background:#444; color:#ddd; }
 
-  /* 액션 버튼 */
   .action-row { display:flex; flex-direction:column; gap:5px; flex-shrink:0; }
   .abtn {
     background:#2a2a2a; color:#ccc;
@@ -103,17 +99,17 @@ HTML = """
   }
   .abtn:active { background:#3a3a3a; color:#fff; }
 
-  /* 팀명 */
   .team-name-row { display:flex; gap:6px; flex-shrink:0; height:42px; }
   .tname {
     flex:1; background:transparent; border:none;
     border-bottom:2px solid #333; color:#fff;
     font-size:1.1rem; font-weight:700;
     text-align:center; outline:none; border-radius:0; padding:4px;
+    transition: color .3s, border-bottom-color .3s;
   }
   .tname:focus { border-bottom-color:#666; }
-  .tname-a { color:#ff6666; }
-  .tname-b { color:#6699ff; }
+  .tname-red  { color:#ff6666; border-bottom-color:#ff6666; }
+  .tname-blue { color:#6699ff; border-bottom-color:#6699ff; }
 </style>
 </head>
 <body>
@@ -126,8 +122,8 @@ HTML = """
 
   <div class="center">
     <div class="team-name-row">
-      <input class="tname tname-a" id="nameA" value="A 팀" maxlength="8">
-      <input class="tname tname-b" id="nameB" value="B 팀" maxlength="8">
+      <input class="tname tname-red"  id="nameA" value="A 팀" maxlength="8">
+      <input class="tname tname-blue" id="nameB" value="B 팀" maxlength="8">
     </div>
 
     <div class="set-row">
@@ -161,16 +157,12 @@ HTML = """
 </div>
 
 <script>
-// ── 상태 ──────────────────────────────────────────────────────────
 let sA=0, sB=0, setA=0, setB=0;
 let tLeft=600, tTotal=600, tRunning=false, tInterval=null;
-
-// 현재 색상 상태: true = A는 빨강, B는 파랑 / false = 반전
 let colorsNormal = true;
-const COLOR_RED  = '#EE0000';
-const COLOR_BLUE = '#0033EE';
-const SET_RED    = '#BB0000';
-const SET_BLUE   = '#0022CC';
+
+const COLOR_RED  = '#EE0000', COLOR_BLUE = '#0033EE';
+const SET_RED    = '#BB0000', SET_BLUE   = '#0022CC';
 
 function applyColors(){
   if(colorsNormal){
@@ -178,16 +170,19 @@ function applyColors(){
     document.getElementById('teamB').style.background = COLOR_BLUE;
     document.getElementById('setA').style.background  = SET_RED;
     document.getElementById('setB').style.background  = SET_BLUE;
+    document.getElementById('nameA').className = 'tname tname-red';
+    document.getElementById('nameB').className = 'tname tname-blue';
   } else {
     document.getElementById('teamA').style.background = COLOR_BLUE;
     document.getElementById('teamB').style.background = COLOR_RED;
     document.getElementById('setA').style.background  = SET_BLUE;
     document.getElementById('setB').style.background  = SET_RED;
+    document.getElementById('nameA').className = 'tname tname-blue';
+    document.getElementById('nameB').className = 'tname tname-red';
   }
 }
 applyColors();
 
-// ── 렌더 ──────────────────────────────────────────────────────────
 function render(){
   document.getElementById('scoreA').textContent = sA;
   document.getElementById('scoreB').textContent = sB;
@@ -195,14 +190,10 @@ function render(){
   document.getElementById('setScoreB').textContent = setB;
 }
 
-// ── 세트 ──────────────────────────────────────────────────────────
 function addSet(t){ if(t==='a') setA++; else setB++; render(); }
-
-// ── 초기화 ────────────────────────────────────────────────────────
 function resetScores(){ sA=0; sB=0; render(); }
 function resetSets(){ setA=0; setB=0; render(); }
 
-// ── 팀 교체 (점수 + 세트 + 이름 + 색상 모두) ─────────────────────
 function swapTeams(){
   [sA,sB]=[sB,sA];
   [setA,setB]=[setB,setA];
@@ -220,7 +211,6 @@ function swapTeams(){
   });
 }
 
-// ── 롱프레스 ──────────────────────────────────────────────────────
 function setupPress(panelId, ringId, team){
   const panel = document.getElementById(panelId);
   const ring  = document.getElementById(ringId);
@@ -243,13 +233,8 @@ function setupPress(panelId, ringId, team){
     },600);
   }
   function onEnd(){
-    clearTimeout(timer);
-    ring.classList.remove('active');
-    if(!fired){
-      if(team==='a') sA++;
-      else sB++;
-      render();
-    }
+    clearTimeout(timer); ring.classList.remove('active');
+    if(!fired){ if(team==='a') sA++; else sB++; render(); }
     fired=false;
   }
   function onLeave(){ clearTimeout(timer); ring.classList.remove('active'); fired=true; }
@@ -263,7 +248,6 @@ function setupPress(panelId, ringId, team){
 setupPress('teamA','ringA','a');
 setupPress('teamB','ringB','b');
 
-// ── 알람 사운드 (Web Audio API) ───────────────────────────────────
 function playAlarm(){
   try {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -276,41 +260,36 @@ function playAlarm(){
       {freq:1046,start:1.35, dur:0.55},
     ];
     pattern.forEach(({freq,start,dur})=>{
-      const osc  = ctx.createOscillator();
-      const gain = ctx.createGain();
+      const osc=ctx.createOscillator(), gain=ctx.createGain();
       osc.connect(gain); gain.connect(ctx.destination);
-      osc.type = 'square';
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0.35, ctx.currentTime + start);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
-      osc.start(ctx.currentTime + start);
-      osc.stop(ctx.currentTime + start + dur + 0.05);
+      osc.type='square'; osc.frequency.value=freq;
+      gain.gain.setValueAtTime(0.35, ctx.currentTime+start);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+start+dur);
+      osc.start(ctx.currentTime+start);
+      osc.stop(ctx.currentTime+start+dur+0.05);
     });
-  } catch(e){ console.warn('Audio error', e); }
+  } catch(e){ console.warn('Audio error',e); }
 }
 
-// ── 타이머 ────────────────────────────────────────────────────────
 function fmtTime(s){ return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
 
 function updateTimerUI(){
-  let el = document.getElementById('timerDisp');
-  el.textContent = fmtTime(tLeft);
-  el.style.color = tLeft<=30 ? '#ff3333' : tLeft<=60 ? '#ffaa00' : '#ffffff';
+  let el=document.getElementById('timerDisp');
+  el.textContent=fmtTime(tLeft);
+  el.style.color = tLeft<=30?'#ff3333': tLeft<=60?'#ffaa00':'#ffffff';
 }
 
 function startTimer(){
   if(tRunning) return;
-  let mins = parseInt(document.getElementById('tInput').value) || 10;
+  let mins=parseInt(document.getElementById('tInput').value)||10;
   if(tLeft===0){ tLeft=mins*60; tTotal=tLeft; }
   tRunning=true;
   document.getElementById('btnStart').style.display='none';
   document.getElementById('btnPause').style.display='inline-block';
   document.getElementById('tStatus').textContent='진행 중';
-  tInterval = setInterval(()=>{
-    if(tLeft>0){
-      tLeft--;
-      updateTimerUI();
-    } else {
+  tInterval=setInterval(()=>{
+    if(tLeft>0){ tLeft--; updateTimerUI(); }
+    else{
       clearInterval(tInterval); tRunning=false;
       document.getElementById('tStatus').textContent='종료!';
       document.getElementById('btnPause').style.display='none';
@@ -329,7 +308,7 @@ function pauseTimer(){
 
 function resetTimer(){
   clearInterval(tInterval); tRunning=false;
-  let mins = parseInt(document.getElementById('tInput').value) || 10;
+  let mins=parseInt(document.getElementById('tInput').value)||10;
   tLeft=mins*60; tTotal=tLeft;
   updateTimerUI();
   document.getElementById('btnPause').style.display='none';

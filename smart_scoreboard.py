@@ -56,6 +56,7 @@ HTML = """
     display:flex; align-items:center; justify-content:center;
     font-size:3.8rem; font-weight:900; color:#fff;
     cursor:pointer; transition:filter .15s;
+    position:relative; overflow:hidden;
   }
   .set-box:active { filter:brightness(1.4); }
 
@@ -110,6 +111,13 @@ HTML = """
   .tname:focus { border-bottom-color:#666; }
   .tname-red  { color:#ff6666; border-bottom-color:#ff6666; }
   .tname-blue { color:#6699ff; border-bottom-color:#6699ff; }
+
+  /* 저작권 */
+  .copyright {
+    text-align:center; font-size:.62rem; color:#333;
+    letter-spacing:.06em; padding: 2px 0 1px 0;
+    flex-shrink:0;
+  }
 </style>
 </head>
 <body>
@@ -127,8 +135,8 @@ HTML = """
     </div>
 
     <div class="set-row">
-      <div class="set-box" id="setA" onclick="addSet('a')"><span id="setScoreA">0</span></div>
-      <div class="set-box" id="setB" onclick="addSet('b')"><span id="setScoreB">0</span></div>
+      <div class="set-box" id="setA"><div class="press-ring" id="ringSetA"></div><span id="setScoreA">0</span></div>
+      <div class="set-box" id="setB"><div class="press-ring" id="ringSetB"></div><span id="setScoreB">0</span></div>
     </div>
 
     <div class="timer-box">
@@ -148,6 +156,8 @@ HTML = """
       <div class="abtn" onclick="resetScores()">점수 초기화</div>
       <div class="abtn" onclick="resetSets()">세트 초기화</div>
     </div>
+
+    <div class="copyright">ⓒ AI-ON 교과연구회 All rights reserved.</div>
   </div>
 
   <div class="team-panel" id="teamB">
@@ -161,8 +171,8 @@ let sA=0, sB=0, setA=0, setB=0;
 let tLeft=600, tTotal=600, tRunning=false, tInterval=null;
 let colorsNormal = true;
 
-const COLOR_RED  = '#EE0000', COLOR_BLUE = '#0033EE';
-const SET_RED    = '#BB0000', SET_BLUE   = '#0022CC';
+const COLOR_RED='#EE0000', COLOR_BLUE='#0033EE';
+const SET_RED='#BB0000',   SET_BLUE='#0022CC';
 
 function applyColors(){
   if(colorsNormal){
@@ -190,20 +200,17 @@ function render(){
   document.getElementById('setScoreB').textContent = setB;
 }
 
-function addSet(t){ if(t==='a') setA++; else setB++; render(); }
 function resetScores(){ sA=0; sB=0; render(); }
 function resetSets(){ setA=0; setB=0; render(); }
 
 function swapTeams(){
-  [sA,sB]=[sB,sA];
-  [setA,setB]=[setB,setA];
+  [sA,sB]=[sB,sA]; [setA,setB]=[setB,setA];
   let na=document.getElementById('nameA').value;
   let nb=document.getElementById('nameB').value;
   document.getElementById('nameA').value=nb;
   document.getElementById('nameB').value=na;
-  colorsNormal = !colorsNormal;
-  applyColors();
-  render();
+  colorsNormal=!colorsNormal;
+  applyColors(); render();
   ['teamA','teamB'].forEach(id=>{
     let el=document.getElementById(id);
     el.style.filter='brightness(1.5)';
@@ -211,74 +218,64 @@ function swapTeams(){
   });
 }
 
-function setupPress(panelId, ringId, team){
-  const panel = document.getElementById(panelId);
-  const ring  = document.getElementById(ringId);
+function setupPress(el, ringEl, onShort, onLong){
   let timer=null, fired=false;
-
   function onStart(e){
     fired=false;
-    let cx = e.touches ? e.touches[0].clientX : e.clientX;
-    let cy = e.touches ? e.touches[0].clientY : e.clientY;
-    let rect = panel.getBoundingClientRect();
-    ring.style.left = (cx - rect.left - 60) + 'px';
-    ring.style.top  = (cy - rect.top  - 60) + 'px';
-    ring.classList.add('active');
-    timer = setTimeout(()=>{
-      fired=true;
-      if(team==='a'&&sA>0) sA--;
-      else if(team==='b'&&sB>0) sB--;
-      render();
-      ring.classList.remove('active');
-    },600);
+    let cx=e.touches?e.touches[0].clientX:e.clientX;
+    let cy=e.touches?e.touches[0].clientY:e.clientY;
+    let rect=el.getBoundingClientRect();
+    ringEl.style.left=(cx-rect.left-60)+'px';
+    ringEl.style.top =(cy-rect.top -60)+'px';
+    ringEl.classList.add('active');
+    timer=setTimeout(()=>{ fired=true; onLong(); ringEl.classList.remove('active'); },600);
   }
   function onEnd(){
-    clearTimeout(timer); ring.classList.remove('active');
-    if(!fired){ if(team==='a') sA++; else sB++; render(); }
+    clearTimeout(timer); ringEl.classList.remove('active');
+    if(!fired) onShort();
     fired=false;
   }
-  function onLeave(){ clearTimeout(timer); ring.classList.remove('active'); fired=true; }
-
-  panel.addEventListener('mousedown', onStart);
-  panel.addEventListener('mouseup', onEnd);
-  panel.addEventListener('mouseleave', onLeave);
-  panel.addEventListener('touchstart', onStart, {passive:true});
-  panel.addEventListener('touchend', onEnd);
+  function onLeave(){ clearTimeout(timer); ringEl.classList.remove('active'); fired=true; }
+  el.addEventListener('mousedown',  onStart);
+  el.addEventListener('mouseup',    onEnd);
+  el.addEventListener('mouseleave', onLeave);
+  el.addEventListener('touchstart', onStart, {passive:true});
+  el.addEventListener('touchend',   onEnd);
 }
-setupPress('teamA','ringA','a');
-setupPress('teamB','ringB','b');
+
+setupPress(document.getElementById('teamA'), document.getElementById('ringA'),
+  ()=>{ sA++; render(); }, ()=>{ if(sA>0) sA--; render(); });
+setupPress(document.getElementById('teamB'), document.getElementById('ringB'),
+  ()=>{ sB++; render(); }, ()=>{ if(sB>0) sB--; render(); });
+setupPress(document.getElementById('setA'), document.getElementById('ringSetA'),
+  ()=>{ setA++; render(); }, ()=>{ if(setA>0) setA--; render(); });
+setupPress(document.getElementById('setB'), document.getElementById('ringSetB'),
+  ()=>{ setB++; render(); }, ()=>{ if(setB>0) setB--; render(); });
 
 function playAlarm(){
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const pattern = [
-      {freq:880, start:0,    dur:0.18},
-      {freq:880, start:0.22, dur:0.18},
-      {freq:880, start:0.44, dur:0.18},
-      {freq:1046,start:0.7,  dur:0.35},
-      {freq:880, start:1.1,  dur:0.18},
-      {freq:1046,start:1.35, dur:0.55},
-    ];
-    pattern.forEach(({freq,start,dur})=>{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    [{freq:880,start:0,dur:.18},{freq:880,start:.22,dur:.18},
+     {freq:880,start:.44,dur:.18},{freq:1046,start:.7,dur:.35},
+     {freq:880,start:1.1,dur:.18},{freq:1046,start:1.35,dur:.55}]
+    .forEach(({freq,start,dur})=>{
       const osc=ctx.createOscillator(), gain=ctx.createGain();
       osc.connect(gain); gain.connect(ctx.destination);
       osc.type='square'; osc.frequency.value=freq;
-      gain.gain.setValueAtTime(0.35, ctx.currentTime+start);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+start+dur);
+      gain.gain.setValueAtTime(.35,ctx.currentTime+start);
+      gain.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+start+dur);
       osc.start(ctx.currentTime+start);
-      osc.stop(ctx.currentTime+start+dur+0.05);
+      osc.stop(ctx.currentTime+start+dur+.05);
     });
-  } catch(e){ console.warn('Audio error',e); }
+  } catch(e){}
 }
 
 function fmtTime(s){ return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
-
 function updateTimerUI(){
   let el=document.getElementById('timerDisp');
   el.textContent=fmtTime(tLeft);
-  el.style.color = tLeft<=30?'#ff3333': tLeft<=60?'#ffaa00':'#ffffff';
+  el.style.color=tLeft<=30?'#ff3333':tLeft<=60?'#ffaa00':'#ffffff';
 }
-
 function startTimer(){
   if(tRunning) return;
   let mins=parseInt(document.getElementById('tInput').value)||10;
@@ -298,14 +295,12 @@ function startTimer(){
     }
   },1000);
 }
-
 function pauseTimer(){
   clearInterval(tInterval); tRunning=false;
   document.getElementById('btnPause').style.display='none';
   document.getElementById('btnStart').style.display='inline-block';
   document.getElementById('tStatus').textContent='일시정지';
 }
-
 function resetTimer(){
   clearInterval(tInterval); tRunning=false;
   let mins=parseInt(document.getElementById('tInput').value)||10;

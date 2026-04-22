@@ -36,19 +36,15 @@ body {
   background:#111;
   flex-direction:column;
   align-items:center; justify-content:center;
-  gap:20px; text-align:center; padding:30px;
+  gap:24px; text-align:center; padding:40px;
 }
-#rotate-overlay .icon { font-size:4rem; animation:spin 1.6s ease-in-out infinite; }
-@keyframes spin {
-  0%   { transform:rotate(0deg); }
-  40%  { transform:rotate(90deg); }
-  100% { transform:rotate(90deg); }
+#rotate-overlay .icon { font-size:4.5rem; animation:tilt 1.8s ease-in-out infinite; }
+@keyframes tilt {
+  0%,100% { transform:rotate(0deg); }
+  50%      { transform:rotate(90deg); }
 }
-#rotate-overlay .msg { font-size:1.2rem; font-weight:700; color:#fff; line-height:1.6; }
-#rotate-overlay .sub { font-size:.85rem; color:#666; }
-@media (orientation:portrait) {
-  #rotate-overlay { display:flex; }
-}
+#rotate-overlay .msg { font-size:1.3rem; font-weight:700; color:#fff; line-height:1.7; }
+#rotate-overlay .sub { font-size:.85rem; color:#555; }
 
 /* ── 공통 컴포넌트 ── */
 .press-ring {
@@ -93,7 +89,7 @@ body {
 .t-input::-webkit-inner-spin-button { -webkit-appearance:none; }
 .tbtn {
   padding:7px 13px; border:none; border-radius:8px;
-  font-size:.9rem; font-weight:700; cursor:pointer; transition:.15s;
+  font-size:.9rem; font-weight:700; cursor:pointer;
   touch-action:manipulation;
 }
 .tbtn:active { transform:scale(.94); }
@@ -105,7 +101,7 @@ body {
   background:#2a2a2a; color:#ccc;
   border:1px solid #3a3a3a; border-radius:10px;
   padding:10px 6px; font-size:.88rem; cursor:pointer;
-  transition:.15s; text-align:center; font-weight:600;
+  text-align:center; font-weight:600;
   touch-action:manipulation; flex:1;
 }
 .abtn:active { background:#3a3a3a; color:#fff; }
@@ -119,10 +115,9 @@ body {
 }
 .tname-red  { color:#ff6666; border-bottom-color:#ff6666; }
 .tname-blue { color:#6699ff; border-bottom-color:#6699ff; }
-
 .copyright { text-align:center; font-size:.58rem; color:#2a2a2a; padding:2px 0; }
 
-/* ── 가로 레이아웃 ── */
+/* ── 레이아웃 ── */
 .board {
   display:flex; flex-direction:row;
   gap:6px; width:100%; height:100%; padding:6px;
@@ -140,12 +135,12 @@ body {
 }
 .name-row { display:flex; gap:6px; flex-shrink:0; height:40px; }
 .set-row  { display:flex; gap:6px; flex-shrink:0; height:clamp(90px,14vh,130px); }
-.action-btns { display:flex; gap:5px; }
+.action-btns { display:flex; gap:5px; flex-shrink:0; }
 </style>
 </head>
 <body>
 
-<!-- 세로 모드 오버레이 -->
+<!-- 세로 모드 오버레이 (JS로 제어) -->
 <div id="rotate-overlay">
   <div class="icon">📱</div>
   <div class="msg">화면을 가로로 돌려주세요</div>
@@ -199,6 +194,39 @@ body {
 </div>
 
 <script>
+// ── 세로 모드 감지 (JS — 실제 기기 방향 기준) ────────────────────
+// CSS orientation 미디어쿼리는 iframe 크기 기준이라 부정확
+// screen.orientation 또는 window.orientation(구형 호환)으로 실제 방향 판단
+function isPortrait(){
+  if(screen.orientation && screen.orientation.type){
+    return screen.orientation.type.startsWith('portrait');
+  }
+  // 구형 iOS 등 fallback
+  if(typeof window.orientation !== 'undefined'){
+    return window.orientation === 0 || window.orientation === 180;
+  }
+  // orientation API 없으면 window 크기로 판단 (데스크탑)
+  return window.innerHeight > window.innerWidth;
+}
+
+function checkOrientation(){
+  const overlay = document.getElementById('rotate-overlay');
+  overlay.style.display = isPortrait() ? 'flex' : 'none';
+}
+
+// 초기 확인
+checkOrientation();
+
+// 방향 바뀔 때마다 확인
+if(screen.orientation){
+  screen.orientation.addEventListener('change', checkOrientation);
+}
+window.addEventListener('orientationchange', ()=>{
+  // orientationchange 후 실제 반영까지 약간의 딜레이 필요
+  setTimeout(checkOrientation, 150);
+});
+window.addEventListener('resize', checkOrientation);
+
 // ── 상태 ─────────────────────────────────────────────
 let sA=0, sB=0, setA=0, setB=0;
 let tLeft=600, tTotal=600, tRunning=false, tInterval=null;
@@ -217,15 +245,13 @@ function applyColors(){
 applyColors();
 
 function render(){
-  document.getElementById('scoreA').textContent   = sA;
-  document.getElementById('scoreB').textContent   = sB;
+  document.getElementById('scoreA').textContent    = sA;
+  document.getElementById('scoreB').textContent    = sB;
   document.getElementById('setScoreA').textContent = setA;
   document.getElementById('setScoreB').textContent = setB;
 }
-
 function resetScores(){ sA=0; sB=0; render(); }
 function resetSets(){   setA=0; setB=0; render(); }
-
 function swapTeams(){
   [sA,sB]=[sB,sA]; [setA,setB]=[setB,setA];
   let na=document.getElementById('nameA').value;
@@ -241,16 +267,15 @@ function swapTeams(){
   });
 }
 
-// ── 롱프레스 핵심: touchstart에서 preventDefault() 호출
-//    → 브라우저가 mouse 이벤트를 추가로 발생시키지 않음 (2점 버그 완전 차단)
+// ── 롱프레스 (touchstart preventDefault → mouse 이벤트 중복 차단) ─
 function setupPress(el, ringEl, onShort, onLong){
   let timer=null, fired=false;
 
-  function startPress(x, y){
+  function startPress(x,y){
     fired=false;
-    let rect=el.getBoundingClientRect();
-    ringEl.style.left=(x-rect.left-50)+'px';
-    ringEl.style.top =(y-rect.top -50)+'px';
+    let r=el.getBoundingClientRect();
+    ringEl.style.left=(x-r.left-50)+'px';
+    ringEl.style.top =(y-r.top -50)+'px';
     ringEl.classList.add('active');
     timer=setTimeout(()=>{
       fired=true; onLong();
@@ -269,27 +294,16 @@ function setupPress(el, ringEl, onShort, onLong){
     fired=true;
   }
 
-  // 터치 이벤트 (모바일) — passive:false + preventDefault 로 마우스 이벤트 차단
-  el.addEventListener('touchstart', e=>{
-    e.preventDefault();
-    startPress(e.touches[0].clientX, e.touches[0].clientY);
-  }, {passive:false});
+  // 터치 (모바일) — preventDefault로 후속 mouse 이벤트 완전 차단
+  el.addEventListener('touchstart',  e=>{ e.preventDefault(); startPress(e.touches[0].clientX, e.touches[0].clientY); }, {passive:false});
+  el.addEventListener('touchend',    e=>{ e.preventDefault(); endPress(); },    {passive:false});
+  el.addEventListener('touchcancel', e=>{ e.preventDefault(); cancelPress(); }, {passive:false});
 
-  el.addEventListener('touchend', e=>{
-    e.preventDefault();
-    endPress();
-  }, {passive:false});
-
-  el.addEventListener('touchcancel', e=>{
-    e.preventDefault();
-    cancelPress();
-  }, {passive:false});
-
-  // 마우스 이벤트 (데스크탑) — 터치 기기에서는 위 preventDefault 덕분에 발동 안 됨
-  el.addEventListener('mousedown', e=>{ startPress(e.clientX, e.clientY); });
-  el.addEventListener('mouseup',   ()=>{ endPress(); });
-  el.addEventListener('mouseleave',()=>{ cancelPress(); });
-  el.addEventListener('contextmenu', e=>e.preventDefault());
+  // 마우스 (데스크탑 전용 — 터치 기기에서는 위 preventDefault로 발동 안 됨)
+  el.addEventListener('mousedown',  e=>{ startPress(e.clientX, e.clientY); });
+  el.addEventListener('mouseup',    ()=>{ endPress(); });
+  el.addEventListener('mouseleave', ()=>{ cancelPress(); });
+  el.addEventListener('contextmenu',e=>e.preventDefault());
 }
 
 setupPress(document.getElementById('teamA'), document.getElementById('ringA'),

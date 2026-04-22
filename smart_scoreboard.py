@@ -26,9 +26,7 @@ HTML = """
     font-family:'Segoe UI','Malgun Gothic',sans-serif;
     height:700px; overflow:hidden; user-select:none;
   }
-  .board {
-    display:flex; gap:6px; height:700px; padding:6px;
-  }
+  .board { display:flex; gap:6px; height:700px; padding:6px; }
 
   /* ── 팀 패널 ── */
   .team-panel {
@@ -39,10 +37,7 @@ HTML = """
     position:relative; overflow:hidden;
   }
   .team-panel:active { filter:brightness(1.3); }
-  #teamA { background:#EE0000; }
-  #teamB { background:#0033EE; }
 
-  /* 롱프레스 오버레이 */
   .press-ring {
     position:absolute; border-radius:50%;
     border:6px solid rgba(255,255,255,0.6);
@@ -53,54 +48,45 @@ HTML = """
   }
   .press-ring.active { transform:scale(2.5); opacity:1; }
 
-  /* ── 중앙 패널 ── */
-  .center {
-    flex:2.2; display:flex; flex-direction:column; gap:6px;
-  }
+  /* ── 중앙 ── */
+  .center { flex:2.2; display:flex; flex-direction:column; gap:6px; }
 
-  /* 세트 스코어 행 */
-  .set-row {
-    display:flex; gap:6px; height:130px; flex-shrink:0;
-  }
+  /* 세트 */
+  .set-row { display:flex; gap:6px; height:130px; flex-shrink:0; }
   .set-box {
     flex:1; border-radius:12px;
-    display:flex; flex-direction:column;
-    align-items:center; justify-content:center;
-    font-size:3rem; font-weight:900; color:#fff;
-    cursor:pointer; gap:2px; transition:filter .15s;
+    display:flex; align-items:center; justify-content:center;
+    font-size:3.8rem; font-weight:900; color:#fff;
+    cursor:pointer; transition:filter .15s;
   }
   .set-box:active { filter:brightness(1.4); }
-  .set-box small { font-size:0.7rem; font-weight:400; opacity:.7; letter-spacing:.05em; }
-  #setA { background:#BB0000; }
-  #setB { background:#0022CC; }
 
-  /* 타이머 박스 */
+  /* 타이머 */
   .timer-box {
-    flex:1;
-    background:#1c1c1c; border:2px solid #2a2a2a; border-radius:14px;
+    flex:1; background:#1c1c1c; border:2px solid #2a2a2a; border-radius:14px;
     display:flex; flex-direction:column;
-    align-items:center; justify-content:center; gap:8px;
-    padding:10px 8px;
+    align-items:center; justify-content:center; gap:10px;
+    padding:12px 8px;
   }
-  .timer-label { font-size:.75rem; color:#555; letter-spacing:.12em; text-transform:uppercase; }
+  .timer-label { font-size:1.05rem; color:#666; letter-spacing:.15em; text-transform:uppercase; font-weight:700; }
   .timer-time {
     font-family:'Courier New',monospace;
-    font-size:clamp(2.4rem,5vw,3.4rem);
+    font-size:clamp(3rem,6vw,4.2rem);
     font-weight:900; letter-spacing:.1em;
     transition:color .4s;
   }
-  .timer-status { font-size:.72rem; color:#555; }
+  .timer-status { font-size:.9rem; color:#555; font-weight:600; }
   .t-controls { display:flex; gap:6px; align-items:center; }
   .t-input {
-    width:60px; padding:5px; border-radius:8px;
+    width:64px; padding:6px; border-radius:8px;
     background:#2a2a2a; border:1px solid #444; color:#fff;
-    text-align:center; font-size:.9rem;
+    text-align:center; font-size:1rem; font-weight:700;
   }
   .t-input::-webkit-outer-spin-button,
   .t-input::-webkit-inner-spin-button { -webkit-appearance:none; }
   .tbtn {
-    padding:6px 13px; border:none; border-radius:8px;
-    font-size:.9rem; font-weight:700; cursor:pointer; transition:.15s;
+    padding:8px 16px; border:none; border-radius:8px;
+    font-size:1rem; font-weight:700; cursor:pointer; transition:.15s;
   }
   .tbtn:active { transform:scale(.94); }
   #btnStart { background:#00cc55; color:#fff; }
@@ -118,15 +104,12 @@ HTML = """
   .abtn:active { background:#3a3a3a; color:#fff; }
 
   /* 팀명 */
-  .team-name-row {
-    display:flex; gap:6px; flex-shrink:0; height:42px;
-  }
+  .team-name-row { display:flex; gap:6px; flex-shrink:0; height:42px; }
   .tname {
     flex:1; background:transparent; border:none;
     border-bottom:2px solid #333; color:#fff;
     font-size:1.1rem; font-weight:700;
-    text-align:center; outline:none; border-radius:0;
-    padding:4px;
+    text-align:center; outline:none; border-radius:0; padding:4px;
   }
   .tname:focus { border-bottom-color:#666; }
   .tname-a { color:#ff6666; }
@@ -136,55 +119,41 @@ HTML = """
 <body>
 <div class="board">
 
-  <!-- A팀 -->
   <div class="team-panel" id="teamA">
     <div class="press-ring" id="ringA"></div>
     <span id="scoreA">0</span>
   </div>
 
-  <!-- 중앙 -->
   <div class="center">
-
-    <!-- 팀명 입력 -->
     <div class="team-name-row">
       <input class="tname tname-a" id="nameA" value="A 팀" maxlength="8">
       <input class="tname tname-b" id="nameB" value="B 팀" maxlength="8">
     </div>
 
-    <!-- 세트 스코어 -->
     <div class="set-row">
-      <div class="set-box" id="setA" onclick="addSet('a')">
-        <small>A 세트</small>
-        <span id="setScoreA">0</span>
-      </div>
-      <div class="set-box" id="setB" onclick="addSet('b')">
-        <small>B 세트</small>
-        <span id="setScoreB">0</span>
-      </div>
+      <div class="set-box" id="setA" onclick="addSet('a')"><span id="setScoreA">0</span></div>
+      <div class="set-box" id="setB" onclick="addSet('b')"><span id="setScoreB">0</span></div>
     </div>
 
-    <!-- 타이머 -->
     <div class="timer-box">
-      <div class="timer-label">⏱ 타이머</div>
+      <div class="timer-label">타이머</div>
       <div class="timer-time" id="timerDisp">10:00</div>
       <div class="t-controls">
         <input type="number" class="t-input" id="tInput" value="10" min="1" max="99">
         <button class="tbtn" id="btnStart" onclick="startTimer()">▶ START</button>
         <button class="tbtn" id="btnPause" onclick="pauseTimer()">⏸ PAUSE</button>
-        <button class="tbtn" id="btnReset" onclick="resetTimer()">↺</button>
+        <button class="tbtn" id="btnReset" onclick="resetTimer()">↺ 리셋</button>
       </div>
       <div class="timer-status" id="tStatus">대기 중</div>
     </div>
 
-    <!-- 액션 버튼 -->
     <div class="action-row">
-      <div class="abtn" onclick="swapTeams()">🔄 팀 교체</div>
-      <div class="abtn" onclick="resetScores()">🗑 점수 초기화</div>
-      <div class="abtn" onclick="resetSets()">📋 세트 초기화</div>
+      <div class="abtn" onclick="swapTeams()">팀 교체</div>
+      <div class="abtn" onclick="resetScores()">점수 초기화</div>
+      <div class="abtn" onclick="resetSets()">세트 초기화</div>
     </div>
   </div>
 
-  <!-- B팀 -->
   <div class="team-panel" id="teamB">
     <div class="press-ring" id="ringB"></div>
     <span id="scoreB">0</span>
@@ -192,11 +161,33 @@ HTML = """
 </div>
 
 <script>
-// ── 상태 ──────────────────────────────────────
+// ── 상태 ──────────────────────────────────────────────────────────
 let sA=0, sB=0, setA=0, setB=0;
 let tLeft=600, tTotal=600, tRunning=false, tInterval=null;
 
-// ── 점수 업데이트 ──────────────────────────────
+// 현재 색상 상태: true = A는 빨강, B는 파랑 / false = 반전
+let colorsNormal = true;
+const COLOR_RED  = '#EE0000';
+const COLOR_BLUE = '#0033EE';
+const SET_RED    = '#BB0000';
+const SET_BLUE   = '#0022CC';
+
+function applyColors(){
+  if(colorsNormal){
+    document.getElementById('teamA').style.background = COLOR_RED;
+    document.getElementById('teamB').style.background = COLOR_BLUE;
+    document.getElementById('setA').style.background  = SET_RED;
+    document.getElementById('setB').style.background  = SET_BLUE;
+  } else {
+    document.getElementById('teamA').style.background = COLOR_BLUE;
+    document.getElementById('teamB').style.background = COLOR_RED;
+    document.getElementById('setA').style.background  = SET_BLUE;
+    document.getElementById('setB').style.background  = SET_RED;
+  }
+}
+applyColors();
+
+// ── 렌더 ──────────────────────────────────────────────────────────
 function render(){
   document.getElementById('scoreA').textContent = sA;
   document.getElementById('scoreB').textContent = sB;
@@ -204,20 +195,24 @@ function render(){
   document.getElementById('setScoreB').textContent = setB;
 }
 
-// ── 세트 ──────────────────────────────────────
+// ── 세트 ──────────────────────────────────────────────────────────
 function addSet(t){ if(t==='a') setA++; else setB++; render(); }
 
-// ── 초기화 ────────────────────────────────────
+// ── 초기화 ────────────────────────────────────────────────────────
 function resetScores(){ sA=0; sB=0; render(); }
 function resetSets(){ setA=0; setB=0; render(); }
+
+// ── 팀 교체 (점수 + 세트 + 이름 + 색상 모두) ─────────────────────
 function swapTeams(){
-  [sA,sB]=[sB,sA]; [setA,setB]=[setB,setA];
+  [sA,sB]=[sB,sA];
+  [setA,setB]=[setB,setA];
   let na=document.getElementById('nameA').value;
   let nb=document.getElementById('nameB').value;
   document.getElementById('nameA').value=nb;
   document.getElementById('nameB').value=na;
+  colorsNormal = !colorsNormal;
+  applyColors();
   render();
-  // flash
   ['teamA','teamB'].forEach(id=>{
     let el=document.getElementById(id);
     el.style.filter='brightness(1.5)';
@@ -225,7 +220,7 @@ function swapTeams(){
   });
 }
 
-// ── 롱프레스 ──────────────────────────────────
+// ── 롱프레스 ──────────────────────────────────────────────────────
 function setupPress(panelId, ringId, team){
   const panel = document.getElementById(panelId);
   const ring  = document.getElementById(ringId);
@@ -233,8 +228,11 @@ function setupPress(panelId, ringId, team){
 
   function onStart(e){
     fired=false;
-    ring.style.left = ((e.touches?e.touches[0].clientX:e.clientX) - panel.getBoundingClientRect().left - 60)+'px';
-    ring.style.top  = ((e.touches?e.touches[0].clientY:e.clientY) - panel.getBoundingClientRect().top  - 60)+'px';
+    let cx = e.touches ? e.touches[0].clientX : e.clientX;
+    let cy = e.touches ? e.touches[0].clientY : e.clientY;
+    let rect = panel.getBoundingClientRect();
+    ring.style.left = (cx - rect.left - 60) + 'px';
+    ring.style.top  = (cy - rect.top  - 60) + 'px';
     ring.classList.add('active');
     timer = setTimeout(()=>{
       fired=true;
@@ -244,7 +242,7 @@ function setupPress(panelId, ringId, team){
       ring.classList.remove('active');
     },600);
   }
-  function onEnd(e){
+  function onEnd(){
     clearTimeout(timer);
     ring.classList.remove('active');
     if(!fired){
@@ -265,42 +263,73 @@ function setupPress(panelId, ringId, team){
 setupPress('teamA','ringA','a');
 setupPress('teamB','ringB','b');
 
-// ── 타이머 ────────────────────────────────────
+// ── 알람 사운드 (Web Audio API) ───────────────────────────────────
+function playAlarm(){
+  try {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const pattern = [
+      {freq:880, start:0,    dur:0.18},
+      {freq:880, start:0.22, dur:0.18},
+      {freq:880, start:0.44, dur:0.18},
+      {freq:1046,start:0.7,  dur:0.35},
+      {freq:880, start:1.1,  dur:0.18},
+      {freq:1046,start:1.35, dur:0.55},
+    ];
+    pattern.forEach(({freq,start,dur})=>{
+      const osc  = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = 'square';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.35, ctx.currentTime + start);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + start + dur);
+      osc.start(ctx.currentTime + start);
+      osc.stop(ctx.currentTime + start + dur + 0.05);
+    });
+  } catch(e){ console.warn('Audio error', e); }
+}
+
+// ── 타이머 ────────────────────────────────────────────────────────
 function fmtTime(s){ return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0'); }
 
 function updateTimerUI(){
-  let el=document.getElementById('timerDisp');
-  el.textContent=fmtTime(tLeft);
-  el.style.color = tLeft<=30?'#ff3333': tLeft<=60?'#ffaa00':'#ffffff';
+  let el = document.getElementById('timerDisp');
+  el.textContent = fmtTime(tLeft);
+  el.style.color = tLeft<=30 ? '#ff3333' : tLeft<=60 ? '#ffaa00' : '#ffffff';
 }
 
 function startTimer(){
   if(tRunning) return;
-  let mins=parseInt(document.getElementById('tInput').value)||10;
+  let mins = parseInt(document.getElementById('tInput').value) || 10;
   if(tLeft===0){ tLeft=mins*60; tTotal=tLeft; }
   tRunning=true;
   document.getElementById('btnStart').style.display='none';
   document.getElementById('btnPause').style.display='inline-block';
-  document.getElementById('tStatus').textContent='⏱ 진행 중';
-  tInterval=setInterval(()=>{
-    if(tLeft>0){ tLeft--; updateTimerUI(); }
-    else{
+  document.getElementById('tStatus').textContent='진행 중';
+  tInterval = setInterval(()=>{
+    if(tLeft>0){
+      tLeft--;
+      updateTimerUI();
+    } else {
       clearInterval(tInterval); tRunning=false;
-      document.getElementById('tStatus').textContent='✅ 종료!';
+      document.getElementById('tStatus').textContent='종료!';
       document.getElementById('btnPause').style.display='none';
       document.getElementById('btnStart').style.display='inline-block';
+      playAlarm();
     }
   },1000);
 }
+
 function pauseTimer(){
   clearInterval(tInterval); tRunning=false;
   document.getElementById('btnPause').style.display='none';
   document.getElementById('btnStart').style.display='inline-block';
-  document.getElementById('tStatus').textContent='⏸ 일시정지';
+  document.getElementById('tStatus').textContent='일시정지';
 }
+
 function resetTimer(){
   clearInterval(tInterval); tRunning=false;
-  let mins=parseInt(document.getElementById('tInput').value)||10;
+  let mins = parseInt(document.getElementById('tInput').value) || 10;
   tLeft=mins*60; tTotal=tLeft;
   updateTimerUI();
   document.getElementById('btnPause').style.display='none';

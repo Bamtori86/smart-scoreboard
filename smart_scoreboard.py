@@ -30,6 +30,19 @@ body {
   width:100%; overflow:hidden;
 }
 
+/* ── 전체화면 버튼 ── */
+#fsBtn {
+  position:fixed; bottom:12px; right:12px; z-index:1000;
+  background:rgba(255,255,255,0.08);
+  border:1px solid rgba(255,255,255,0.18);
+  border-radius:10px; color:#aaa;
+  padding:7px 13px; font-size:.85rem; font-weight:700;
+  cursor:pointer; touch-action:manipulation;
+  backdrop-filter:blur(4px);
+  transition:background .2s, color .2s;
+}
+#fsBtn:hover, #fsBtn:active { background:rgba(255,255,255,0.18); color:#fff; }
+
 /* ── 세로 모드 오버레이 ── */
 #rotate-overlay {
   display:none;
@@ -51,28 +64,23 @@ body {
 #board {
   display:flex; flex-direction:row;
   gap:6px; width:100%; padding:6px;
-  /* height는 JS가 window.innerHeight 기준으로 동적 설정 */
 }
 
 /* ── 팀 패널 ── */
 .team-panel {
   flex:4; border-radius:16px;
   display:flex; align-items:center; justify-content:center;
-  font-weight:900; color:#fff;
+  font-weight:900; color:#fff; font-size:5rem;
   cursor:pointer; position:relative; overflow:hidden;
   touch-action:none; -webkit-touch-callout:none;
-  /* 폰트 크기: 패널 높이 기준 동적 적용 (JS) */
-  font-size:5rem;
 }
 .team-panel:active { filter:brightness(1.3); }
 
-/* ── 중앙 패널 ── */
+/* ── 중앙 ── */
 .center {
   flex:2.4; display:flex; flex-direction:column;
   gap:5px; min-width:0;
 }
-
-/* ── 팀명 ── */
 .name-row { display:flex; gap:6px; flex-shrink:0; }
 .tname {
   flex:1; background:transparent; border:none;
@@ -85,7 +93,6 @@ body {
 .tname-red  { color:#ff6666; border-bottom-color:#ff6666; }
 .tname-blue { color:#6699ff; border-bottom-color:#6699ff; }
 
-/* ── 세트 박스 ── */
 .set-row { display:flex; gap:6px; flex-shrink:0; }
 .set-box {
   flex:1; border-radius:12px;
@@ -97,28 +104,20 @@ body {
 }
 .set-box:active { filter:brightness(1.4); }
 
-/* ── 타이머 ── */
 .timer-box {
   background:#1c1c1c; border:2px solid #2a2a2a; border-radius:14px;
   display:flex; flex-direction:column;
   align-items:center; justify-content:center;
   gap:6px; padding:8px; flex:1; min-height:0;
 }
-.timer-label {
-  color:#666; letter-spacing:.12em; font-weight:700;
-  font-size:clamp(.7rem,1.8vw,.95rem);
-}
+.timer-label { color:#666; letter-spacing:.12em; font-weight:700; font-size:clamp(.7rem,1.8vw,.95rem); }
 .timer-time {
   font-family:'Orbitron','Courier New',monospace;
   font-weight:900; letter-spacing:.06em; transition:color .4s;
-  font-size:clamp(1.6rem,5vw,3.8rem);
-  line-height:1.1;
+  font-size:clamp(1.6rem,5vw,3.8rem); line-height:1.1;
 }
 .timer-status { color:#555; font-weight:600; font-size:clamp(.65rem,1.5vw,.85rem); }
-.t-controls {
-  display:flex; gap:4px; align-items:center;
-  flex-wrap:wrap; justify-content:center;
-}
+.t-controls { display:flex; gap:4px; align-items:center; flex-wrap:wrap; justify-content:center; }
 .t-input {
   width:50px; padding:4px; border-radius:8px;
   background:#2a2a2a; border:1px solid #444; color:#fff;
@@ -137,26 +136,18 @@ body {
 #btnPause { background:#ff8800; color:#fff; display:none; }
 #btnReset { background:#444; color:#ddd; }
 
-/* ── 액션 버튼 ── */
 .action-btns { display:flex; gap:4px; flex-shrink:0; }
 .abtn {
   background:#2a2a2a; color:#ccc;
   border:1px solid #3a3a3a; border-radius:10px;
   cursor:pointer; text-align:center; font-weight:600;
-  touch-action:manipulation; flex:1;
-  padding:8px 4px;
+  touch-action:manipulation; flex:1; padding:8px 4px;
   font-size:clamp(.65rem,1.5vw,.88rem);
 }
 .abtn:active { background:#3a3a3a; color:#fff; }
 
-/* ── 저작권 ── */
-.copyright {
-  text-align:center; color:#2a2a2a;
-  font-size:clamp(.45rem,1vw,.6rem);
-  flex-shrink:0; padding:1px 0;
-}
+.copyright { text-align:center; color:#2a2a2a; font-size:clamp(.45rem,1vw,.6rem); flex-shrink:0; padding:1px 0; }
 
-/* ── 롱프레스 링 ── */
 .press-ring {
   position:absolute; border-radius:50%;
   border:5px solid rgba(255,255,255,0.6);
@@ -166,10 +157,19 @@ body {
   pointer-events:none;
 }
 .press-ring.active { transform:scale(3); opacity:1; }
+
+/* 전체화면 시 배경 보장 */
+:fullscreen body,
+:-webkit-full-screen body,
+:-moz-full-screen body { background:#111 !important; }
 </style>
 </head>
 <body>
 
+<!-- 전체화면 버튼 -->
+<button id="fsBtn" onclick="toggleFullscreen()">⛶ 전체화면</button>
+
+<!-- 세로 모드 오버레이 -->
 <div id="rotate-overlay">
   <div class="icon">📱</div>
   <div class="msg">화면을 가로로 돌려주세요</div>
@@ -197,7 +197,7 @@ body {
         <span id="setScoreB">0</span>
       </div>
     </div>
-    <div class="timer-box" id="timerBox">
+    <div class="timer-box">
       <div class="timer-label">타이머</div>
       <div class="timer-time" id="timerDisp">10:00</div>
       <div class="t-controls">
@@ -224,38 +224,55 @@ body {
 
 <script>
 // ══════════════════════════════════════════════════
-// 레이아웃: window.innerHeight 기준으로 보드 높이 설정
-// Streamlit iframe 높이도 postMessage로 동기화
+// 전체화면
+// ══════════════════════════════════════════════════
+function toggleFullscreen(){
+  const el = document.documentElement;
+  const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement;
+  if(!isFs){
+    const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+    if(req) req.call(el);
+  } else {
+    const ex = document.exitFullscreen || document.webkitExitFullscreen || document.mozCancelFullScreen || document.msExitFullscreen;
+    if(ex) ex.call(document);
+  }
+}
+
+// 전체화면 변경 시 버튼 텍스트 + 레이아웃 갱신
+function onFsChange(){
+  const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement);
+  document.getElementById('fsBtn').textContent = isFs ? '✕ 전체화면 종료' : '⛶ 전체화면';
+  setTimeout(fitLayout, 100);
+}
+document.addEventListener('fullscreenchange',       onFsChange);
+document.addEventListener('webkitfullscreenchange', onFsChange);
+document.addEventListener('mozfullscreenchange',    onFsChange);
+
+// ══════════════════════════════════════════════════
+// 레이아웃 동적 조정
 // ══════════════════════════════════════════════════
 function fitLayout(){
   const W = window.innerWidth;
   const H = window.innerHeight;
-
-  // 1) 보드 높이를 실제 뷰포트에 맞춤
   const board = document.getElementById('board');
   board.style.height = H + 'px';
-
-  // 2) Streamlit iframe 높이 동기화 (공식 방법)
   window.parent.postMessage({ type:'streamlit:setFrameHeight', height: H }, '*');
 
-  // 3) 팀 패널 폰트: 패널 높이의 약 38%
-  const panelH = H - 12; // padding 제외
-  const panelFont = Math.max(40, Math.floor(panelH * 0.38));
+  const panelFont = Math.max(40, Math.floor((H - 12) * 0.38));
   document.getElementById('teamA').style.fontSize = panelFont + 'px';
   document.getElementById('teamB').style.fontSize = panelFont + 'px';
 
-  // 4) 세트 행 높이: 전체의 18%
-  const setH = Math.max(60, Math.floor(H * 0.18));
-  document.getElementById('setRow').style.height = setH + 'px';
+  document.getElementById('setRow').style.height = Math.max(60, Math.floor(H * 0.18)) + 'px';
 
-  // 5) 팀명 행 높이: 전체의 7%
   const nameH = Math.max(32, Math.floor(H * 0.07));
   document.querySelector('.name-row').style.height = nameH + 'px';
-  document.querySelectorAll('.tname').forEach(el => el.style.fontSize =
-    Math.max(11, Math.floor(nameH * 0.55)) + 'px');
+  document.querySelectorAll('.tname').forEach(el =>
+    el.style.fontSize = Math.max(11, Math.floor(nameH * 0.55)) + 'px');
 }
 
-// 방향 감지 (JS 기반 — iframe 내에서 screen.orientation 사용)
+// ══════════════════════════════════════════════════
+// 방향 감지
+// ══════════════════════════════════════════════════
 function isPortrait(){
   if(screen.orientation && screen.orientation.type)
     return screen.orientation.type.startsWith('portrait');
@@ -264,15 +281,10 @@ function isPortrait(){
   return window.innerHeight > window.innerWidth;
 }
 function checkOrientation(){
-  document.getElementById('rotate-overlay').style.display =
-    isPortrait() ? 'flex' : 'none';
+  document.getElementById('rotate-overlay').style.display = isPortrait() ? 'flex' : 'none';
   fitLayout();
 }
-
-// 초기 실행
 checkOrientation();
-
-// 이벤트 등록
 window.addEventListener('resize', checkOrientation);
 window.addEventListener('orientationchange', ()=>setTimeout(checkOrientation, 200));
 if(screen.orientation) screen.orientation.addEventListener('change', ()=>setTimeout(checkOrientation, 200));
@@ -319,7 +331,7 @@ function swapTeams(){
 }
 
 // ══════════════════════════════════════════════════
-// 롱프레스 (touchstart preventDefault → 2점 버그 차단)
+// 롱프레스
 // ══════════════════════════════════════════════════
 function setupPress(el,ringEl,onShort,onLong){
   let timer=null,fired=false;
@@ -331,13 +343,8 @@ function setupPress(el,ringEl,onShort,onLong){
     ringEl.classList.add('active');
     timer=setTimeout(()=>{fired=true;onLong();ringEl.classList.remove('active');},600);
   }
-  function endPress(){
-    clearTimeout(timer);ringEl.classList.remove('active');
-    if(!fired)onShort();fired=false;
-  }
-  function cancelPress(){
-    clearTimeout(timer);ringEl.classList.remove('active');fired=true;
-  }
+  function endPress(){ clearTimeout(timer);ringEl.classList.remove('active');if(!fired)onShort();fired=false; }
+  function cancelPress(){ clearTimeout(timer);ringEl.classList.remove('active');fired=true; }
   el.addEventListener('touchstart', e=>{e.preventDefault();startPress(e.touches[0].clientX,e.touches[0].clientY);},{passive:false});
   el.addEventListener('touchend',   e=>{e.preventDefault();endPress();},{passive:false});
   el.addEventListener('touchcancel',e=>{e.preventDefault();cancelPress();},{passive:false});
@@ -346,7 +353,6 @@ function setupPress(el,ringEl,onShort,onLong){
   el.addEventListener('mouseleave', ()=>cancelPress());
   el.addEventListener('contextmenu',e=>e.preventDefault());
 }
-
 setupPress(document.getElementById('teamA'),document.getElementById('ringA'),
   ()=>{sA++;render();},()=>{if(sA>0)sA--;render();});
 setupPress(document.getElementById('teamB'),document.getElementById('ringB'),
